@@ -1,0 +1,192 @@
+:root {
+    --primary: #3b82f6;
+    --primary-dark: #2563eb;
+    --secondary: #64748b;
+    --secondary-dark: #334155;
+    --background: #f0f4ff;
+    --background-light: #dbeafe;
+    --white: #fff;
+    --border: #e5e7eb;
+    --radius: 1rem;
+    --shadow: 0 8px 32px rgba(56, 112, 255, 0.08);
+  }
+  
+  * {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, var(--background), var(--background-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .auth-container {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 2.5rem 2rem 2rem 2rem;
+    max-width: 400px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+  }
+  
+  .app-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 0.5rem;
+    letter-spacing: -1px;
+  }
+  
+  .input {
+    padding: 1rem;
+    font-size: 1.1rem;
+    border: 2px solid var(--border);
+    border-radius: 0.6rem;
+    width: 100%;
+    transition: border-color 0.2s;
+    background: #f8fafc;
+    margin-bottom: 0.5rem;
+  }
+  
+  .input:focus {
+    border-color: var(--primary);
+    outline: none;
+    background: #fff;
+  }
+  
+  .auth-actions {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .btn {
+    font-size: 1.1rem;
+    padding: 0.8rem 1.8rem;
+    border: none;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s, color 0.2s;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.06);
+  }
+  
+  .btn-primary {
+    background: var(--primary);
+    color: var(--white);
+  }
+  
+  .btn-primary:hover {
+    background: var(--primary-dark);
+  }
+  
+  .btn-secondary {
+    background: var(--secondary);
+    color: var(--white);
+  }
+  
+  .btn-secondary:hover {
+    background: var(--secondary-dark);
+  }
+  
+  .btn-link {
+    background: none;
+    color: var(--secondary);
+    text-decoration: underline;
+    padding: 0.8rem 1rem;
+    box-shadow: none;
+  }
+  
+  .btn-link:hover {
+    color: var(--primary);
+    background: #f1f5f9;
+  }
+  
+  .dialog-modal {
+    border: none;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 2rem 1.5rem 1.5rem 1.5rem;
+    min-width: 300px;
+    max-width: 90vw;
+    text-align: center;
+  }
+  
+  .close-btn {
+    background: none;
+    color: #888;
+    font-weight: bold;
+    font-size: 1.5rem;
+    border: none;
+    cursor: pointer;
+    position: absolute;
+    right: 1.2rem;
+    top: 1.2rem;
+  }
+  
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(30, 41, 59, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .modal-content {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 2rem 1.5rem 1.5rem 1.5rem;
+    min-width: 300px;
+    max-width: 90vw;
+    text-align: center;
+    position: relative;
+  }
+  
+  .modal-content h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    color: var(--primary-dark);
+  }
+  
+  .modal-content input {
+    margin: 1rem 0 0.5rem 0;
+    width: 100%;
+  }
+  
+  .modal-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  .hidden {
+    display: none !important;
+  }
+  
+  @media (max-width: 600px) {
+    .auth-container {
+      padding: 1.2rem 0.5rem;
+      max-width: 98vw;
+    }
+    .modal-content, .dialog-modal {
+      padding: 1.2rem 0.5rem;
+      min-width: 0;
+    }
+  }
+  
