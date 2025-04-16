@@ -196,13 +196,7 @@ async function verifyOtp() {
   }
 }
 
-// function handleLoginSuccess(data) {
-//   if (data.token) {
-//     localStorage.setItem("authToken", data.token);
-//   }
-//   showModalText(`Welcome ${data.user.email}`);
-//   // Redirect to dashboard or update UI
-// }
+
 
 function handleLoginSuccess(data) {
   if (data.token) {
