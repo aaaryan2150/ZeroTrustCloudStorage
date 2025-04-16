@@ -16,6 +16,7 @@ const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
 const { put, del, list} = require('@vercel/blob');
 const fileUpload = require('express-fileupload');
+const serverless = require("serverless-http");
 
 // Connect to MongoDB
 connectDB();
@@ -519,3 +520,5 @@ app.delete('/api/files/:fileId(*)', authenticateUser, async (req, res) => {
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");
 });
+
+module.exports.handler = serverless(app);
