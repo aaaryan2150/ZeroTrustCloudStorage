@@ -2,7 +2,19 @@ const asyncHandler = require("express-async-handler");
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const { put, del, list} = require('@vercel/blob');
-const {getUserByEmail} = require("../helper/DBHelper");
+const {getUserByEmail,updateUserCounter} = require("../helper/DBHelper");
+const {
+    generateRegistrationOptions,
+    verifyRegistrationResponse,
+    generateAuthenticationOptions,
+    verifyAuthenticationResponse,
+} = require("@simplewebauthn/server");
+const CLIENT_URL = process.env.CLIENT_URL;
+const RP_ID = process.env.RP_ID;
+const User = require("../models/userModels");
+const base64url = require("base64url");
+
+
 
 
 const loadUserInfo = asyncHandler(async (req, res) => {
@@ -140,18 +152,9 @@ const downloadFiles = asyncHandler(async (req, res) => {
 const deleteFiles = asyncHandler(async (req, res) => {
     try {
       const fileId = req.params.fileId;
-      
-      // In production, verify this file belongs to the user by checking your database
-      // Example:
-      // const file = await File.findOne({ _id: fileId, userId: req.user.id });
-      // if (!file) return res.status(404).json({ error: 'File not found' });
-      
+
       // Delete from Vercel Blob
       await del(fileId);
-      
-      // Remove from your database
-      // Example:
-      // await File.deleteOne({ _id: fileId });
       
       res.json({ success: true });
     } catch (error) {
@@ -160,10 +163,84 @@ const deleteFiles = asyncHandler(async (req, res) => {
     }
 });
 
+const deleteInitAuth = asyncHandler(async (req, res) => {
+    try {
+      const { email } = req.query;
+      if (!email) return res.status(400).json({ error: "Email required" });
+  
+      const user = await getUserByEmail(email);
+      console.log(user);
+      
+      if (!user) return res.status(400).json({ error: "User not found" });
+  
+      const options = await generateAuthenticationOptions({
+        rpID: RP_ID,
+        allowCredentials: [{
+          id: user.passKey.id,
+          type: "public-key",
+          transports: user.passKey.transports || [],
+        }],
+      });
+  
+      res.cookie("authInfo", JSON.stringify({
+        userId: user._id.toString(),
+        challenge: options.challenge
+      }), { httpOnly: true, maxAge: 60000, secure: true });
+  
+      res.json(options);
+      console.log("STEP 1 SUCCESS");
+      
+    } catch (error) {
+      console.error("Init auth error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+});
+
+const deleteVerifyAuth = asyncHandler( async (req, res) => {
+    try {
+      const authInfo = JSON.parse(req.cookies.authInfo || "null");
+      if (!authInfo) return res.status(400).json({ error: "Authentication info missing" });
+      
+      const user = await User.findById(authInfo.userId);
+      if (!user || user.passKey.id !== req.body.id) {
+        return res.status(400).json({ error: "Invalid user" });
+      }
+  
+      const verification = await verifyAuthenticationResponse({
+        response: req.body,
+        expectedChallenge: authInfo.challenge,
+        expectedOrigin: CLIENT_URL,
+        expectedRPID: RP_ID,
+        authenticator: {
+          credentialID: base64url.toBuffer(user.passKey.id),
+          credentialPublicKey: base64url.toBuffer(user.passKey.publicKey),
+          counter: user.passKey.counter,
+          transports: user.passKey.transports,
+        },
+      });
+  
+      if (!verification.verified) {
+        return res.status(400).json({ verified: false, error: "Verification failed" });
+      }
+  
+      await updateUserCounter(user.id, verification.authenticationInfo.newCounter);
+      res.clearCookie("authInfo");
+      console.log("STEP 2 SUCCESS");
+      res.json({ verified: true });
+      
+    } catch (error) {
+      console.error("Verify auth error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+});
+
+
 module.exports = {
     loadUserInfo,
     uploadFiles,
     listFiles,
     downloadFiles,
-    deleteFiles
+    deleteFiles,
+    deleteInitAuth,
+    deleteVerifyAuth
 }

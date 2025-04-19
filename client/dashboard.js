@@ -1,3 +1,4 @@
+import { startAuthentication, startRegistration } from "@simplewebauthn/browser"
 document.addEventListener('DOMContentLoaded', function() {
     // Check if user is authenticated
     const token = localStorage.getItem('authToken');
@@ -26,7 +27,7 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-
+let userEmail;
 async function loadUserInfo() {
     try {
         const token = localStorage.getItem('authToken');
@@ -50,6 +51,7 @@ async function loadUserInfo() {
         }
         
         const userData = await response.json();
+        userEmail = userData.email;
         document.getElementById('user-info').innerHTML = `
             <p>Email: ${userData.email}</p>
             <p>User ID: ${userData.id}</p>
@@ -61,6 +63,8 @@ async function loadUserInfo() {
         `;
     }
 }
+
+
 
 function logout() {
     localStorage.removeItem('authToken');
@@ -151,7 +155,7 @@ async function loadFiles() {
         });
         
         document.querySelectorAll('.delete-button').forEach(button => {
-            button.addEventListener('click', () => deleteFile(button.dataset.id));
+            button.addEventListener('click', () => deleteF(button.dataset.id));
         });
     } catch (error) {
         console.error('Error loading files:', error);
@@ -244,6 +248,8 @@ async function downloadFile(fileId) {
 }
 
 async function deleteFile(fileId) {
+    console.log("initiated delete sequence");
+    
     if (!confirm('Are you sure you want to delete this file?')) {
         return;
     }
@@ -269,3 +275,98 @@ async function deleteFile(fileId) {
         alert(`Delete failed: ${error.message}`);
     }
 }
+let currentUserEmail;
+async function deleteF(fileId) {
+    const email = userEmail
+    currentUserEmail = email;
+    console.log(email);
+    
+    // if (!email) {
+    //   showModalText("Please enter an email");
+    //   return;
+    // }
+  
+    try {
+      // 1. Get challenge from server
+      const initResponse = await fetch(
+        `http://localhost:3000/api/files/init-auth?email=${encodeURIComponent(email)}`,
+        { credentials: "include" }
+      );
+  
+      if (!initResponse.ok) {
+        const error = await initResponse.json();
+        throw new Error(error.error || "Failed to start authentication");
+      }
+  
+      const options = await initResponse.json();
+  
+      // 2. Get passkey
+      const authJSON = await startAuthentication(options);
+
+      console.log("ok0");
+      
+  
+      // 3. Verify passkey with DB
+      const verifyResponse = await fetch(`http://localhost:3000/api/files/verify-auth`, {
+        credentials: "include",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          // Send only required fields
+          id: authJSON.id,
+          rawId: authJSON.rawId,
+          response: authJSON.response,
+          type: authJSON.type,
+          clientExtensionResults: authJSON.clientExtensionResults,
+          transports: authJSON.transports || [],
+        }),
+      });
+  
+      console.log("ok1");
+      
+  
+      if (!verifyResponse.ok) {
+        const error = await verifyResponse.json();
+        throw new Error(error.error || "Verification failed");
+      }
+  
+      console.log("ok 2");
+      
+  
+      const verifyData = await verifyResponse.json();
+      if (verifyData.verified) {
+        // showModalText(`Successfully logged in ${email}`);
+        deleteFile(fileId);
+      } else {
+        showModalText("Authentication failed");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      showModalText(error.message || "Login failed");
+    }
+}
+
+function handleLoginSuccess(data) {
+    if (data.token) {
+      // Store the JWT token in localStorage
+      localStorage.setItem("authToken", data.token);
+      
+      // Show a brief success message
+      showModalText(`Welcome ${data.user.email}`);
+      
+      // Redirect to dashboard (or another protected page)
+      setTimeout(() => {
+        window.location.href = "/dashboard.html";  // Change this to your desired page
+      }, 1500); // Short delay to show the welcome message
+    } else {
+      showModalText("Authentication successful but no token received");
+    }
+}
+
+function showModalText(text) {
+    modal.querySelector("[data-content]").innerText = text
+    modal.showModal()
+}
+  

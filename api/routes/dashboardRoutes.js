@@ -7,13 +7,17 @@ const
     uploadFiles,
     listFiles,
     downloadFiles,
-    deleteFiles
+    deleteFiles,
+    deleteInitAuth,
+    deleteVerifyAuth
 } = require("../controllers/dashboardControllers")
 
 router.get("/api/user-info", loadUserInfo);
 router.post('/api/upload', authenticateUser,uploadFiles);
 router.get('/api/files', authenticateUser, listFiles);
 router.get('/api/download/:fileId(*)', authenticateUser, downloadFiles);
+router.get("/api/files/init-auth", deleteInitAuth);
+router.post("/api/files/verify-auth",deleteVerifyAuth);
 router.delete('/api/files/:fileId(*)', authenticateUser, deleteFiles);
 
   
