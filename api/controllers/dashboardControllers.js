@@ -14,9 +14,6 @@ const RP_ID = process.env.RP_ID;
 const User = require("../models/userModels");
 const base64url = require("base64url");
 
-
-
-
 const loadUserInfo = asyncHandler(async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
